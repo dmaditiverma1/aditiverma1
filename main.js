@@ -1,4 +1,4 @@
-// Aditi Verma Portfolio - Interactive Features & Functionality
+﻿// Aditi Verma Portfolio - Interactive Features & Functionality
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Close mobile menu on clicking any link
         const mobileLinks = document.querySelectorAll('.mobile-nav-link');
         mobileLinks.forEach(link => {
             link.addEventListener('click', () => {
@@ -30,24 +29,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Animated Stats Counter on Scroll
+    // 2. Animated Stats Counter (Immediate display + smooth counting)
     const counters = document.querySelectorAll('.counter');
     let hasAnimated = false;
 
     const runCounters = () => {
+        if (hasAnimated) return;
+        hasAnimated = true;
         counters.forEach(counter => {
             const target = parseFloat(counter.getAttribute('data-target'));
             const decimals = parseInt(counter.getAttribute('data-decimals') || '0', 10);
             const prefix = counter.getAttribute('data-prefix') || '';
             const suffix = counter.getAttribute('data-suffix') || '';
-            const duration = 1800; // ms
+            const duration = 1500;
             const startTime = performance.now();
 
             const updateCount = (currentTime) => {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                
-                // Ease out quad
                 const easeProgress = 1 - Math.pow(1 - progress, 3);
                 const currentVal = easeProgress * target;
 
@@ -60,11 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (progress < 1) {
                     requestAnimationFrame(updateCount);
                 } else {
-                    if (decimals > 0) {
-                        counter.innerText = prefix + target.toFixed(decimals) + suffix;
-                    } else {
-                        counter.innerText = prefix + target + suffix;
-                    }
+                    counter.innerText = prefix + (decimals > 0 ? target.toFixed(decimals) : target) + suffix;
                 }
             };
 
@@ -72,18 +67,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // Intersection Observer for Counters
+    // Auto trigger counters after slight delay so numbers are never stuck at 0
+    setTimeout(runCounters, 300);
+
+    // Also observe on scroll
     const counterSection = document.querySelector('.counter')?.closest('section');
-    if (counterSection) {
+    if (counterSection && 'IntersectionObserver' in window) {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting && !hasAnimated) {
-                    hasAnimated = true;
+                if (entry.isIntersecting) {
                     runCounters();
                 }
             });
-        }, { threshold: 0.25 });
-
+        }, { threshold: 0.1 });
         observer.observe(counterSection);
     }
 
@@ -93,35 +89,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Update active state
             filterButtons.forEach(b => {
-                b.classList.remove('active', 'bg-emerald-500', 'text-slate-950');
-                b.classList.add('bg-slate-800/80', 'text-slate-300');
+                b.classList.remove('active', 'bg-[#987AB8]', 'text-white');
+                b.classList.add('bg-white', 'text-[#554A62]');
             });
-            btn.classList.add('active', 'bg-emerald-500', 'text-slate-950');
-            btn.classList.remove('bg-slate-800/80', 'text-slate-300');
+            btn.classList.add('active', 'bg-[#987AB8]', 'text-white');
+            btn.classList.remove('bg-white', 'text-[#554A62]');
 
             const filter = btn.getAttribute('data-filter');
-
             projectCards.forEach(card => {
                 const category = card.getAttribute('data-category');
-                if (filter === 'all' || category.includes(filter)) {
-                    card.style.display = 'flex';
-                    card.classList.add('animate-fadeIn');
+                if (filter === 'all' || category === filter) {
+                    card.style.display = 'block';
+                    card.classList.remove('hidden');
                 } else {
                     card.style.display = 'none';
+                    card.classList.add('hidden');
                 }
             });
         });
     });
 
-    // 4. Dynamic Copyright Year
+    // 4. Dynamic Year
     const yearElem = document.getElementById('currentYear');
     if (yearElem) {
         yearElem.textContent = new Date().getFullYear();
     }
 
-    // 7. Certificate Lightbox Modal
+    // 5. Certificate Lightbox Modal
     const certModal = document.getElementById('certModal');
     const certModalImg = document.getElementById('certModalImg');
     const certModalTitle = document.getElementById('certModalTitle');
@@ -155,9 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         closeCertModal.addEventListener('click', closeModal);
         certModal.addEventListener('click', (e) => {
-            if (e.target === certModal) {
-                closeModal();
-            }
+            if (e.target === certModal) closeModal();
         });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !certModal.classList.contains('hidden')) {
